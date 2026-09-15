@@ -66,6 +66,8 @@ The application uses Firebase Authentication and Firestore Security Rules to pro
 
 Customer tracking is provided through controlled public tracking functionality.
 
+## Screenshoots
+https://drive.google.com/drive/folders/1hkcZEDbYUZhxomL480Lrg5wRvIF6VYXw?usp=drive_link
 
 
 ## Deployment
