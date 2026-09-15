@@ -1,0 +1,42 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true;
+    }
+
+    // Admin directory is intentionally not writable from the web client.
+    // Create the first admin document from the Firebase Console:
+    // admins/{AUTH_USER_UID} -> { active: true, email: "..." }
+    match /admins/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // Private operational records. Only authorized AUTO 360 admins can access them.
+    match /vehicles/{vehicleId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Public tracking projection. Keep this document limited to customer-safe fields.
+    // The random tracking ID acts as a bearer-style link; do not put private/internal
+    // notes, costs, phone numbers, or staff-only information here.
+    match /publicTrackings/{trackingId} {
+      allow get: if true;
+      allow list: if false;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
